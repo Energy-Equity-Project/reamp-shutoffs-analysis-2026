@@ -316,7 +316,92 @@ Two CSVs are written to `outputs/` with a `dd-mm-yyyy` date prefix
 
 ---
 
-## 4. Data Sources
+## 4. Utility Profits Methodology
+
+### 4.1 Definition and metrics
+
+**Utility profit** is the net income (after-tax) reported by investor-owned utilities,
+expressed in millions of dollars. **Profit as portion of bill (%)** is the share of the
+average customer's bill attributable to utility profit (as reported by the Economic Policy
+Institute).
+
+The following metrics are produced per utility:
+
+| Metric | Description |
+|--------|-------------|
+| `profit_2021_millions` | Net income in 2021 ($ millions) |
+| `profit_2025_millions` | Net income in 2025 ($ millions) |
+| `profit_change_ratio` | `profit_2025 / profit_2021` |
+| `pob_2021` | Profit as % of bill in 2021 |
+| `pob_2025` | Profit as % of bill in 2025 |
+| `pob_change_ratio` | `pob_2025 / pob_2021` |
+
+Change ratios greater than 1 indicate growth from 2021 to 2025.
+(`07_calculate_utility_profits.R:49–58`)
+
+### 4.2 Unit and state attribution
+
+Analysis is at the **company level** (one row per utility). A utility is included in the
+RE-AMP summary if its `Service state(s)` field contains at least one RE-AMP state
+("any overlap" rule). The `reamp_states_served` column captures which RE-AMP states each
+utility serves (comma-separated intersection).
+
+**No per-state allocation is produced.** Because a company's net income is not divisible
+across served states in a principled way, the analysis intentionally does not attempt to
+attribute a share of profit to individual states. All metrics are company-wide totals.
+(`07_calculate_utility_profits.R:35–44`)
+
+### 4.3 Data cleaning
+
+The 2021 and 2025 profit and portion-of-bill columns import as character type because the
+source workbook contains the string `"N/A"` for utilities with missing data. These are
+coerced to `NA` via `readr::parse_number()`. Years 2022–2024 import as numeric and require
+no coercion. (`07_calculate_utility_profits.R:20–29`)
+
+Utility names in the source carry footnote markers (`*`, `**`, `***`, `****`). These are
+extracted into a `name_footnote` column and stripped from the utility name:
+
+- `**` = Form 1 data (instead of SEC 10-K)
+- `***` = reports end of fiscal year
+- `****` = bought by private equity in 2025; no longer reports to the SEC
+
+(`07_calculate_utility_profits.R:30–32`)
+
+### 4.4 Decision rules
+
+**Missing or zero 2021 base.** If `profit_2021_millions` is `NA` or `0`, the
+`profit_change_ratio` is set to `NA` (analogously for `pob_change_ratio`). This applies
+to utilities that did not report 2021 data or were newly formed/acquired. A list of
+affected utilities is printed to the console at runtime.
+(`07_calculate_utility_profits.R:49–58`)
+
+**Known data-quality caveat — portion of bill (%).** Values in the source
+`Profit Portion of Bill (%)` column span approximately 0.1% to 11% across utilities.
+These are company-reported or EPI-derived figures from heterogeneous underlying sources;
+cross-utility comparisons of `pob_*` values and `pob_change_ratio` rankings should be
+treated with caution.
+
+### 4.5 Rankings
+
+Rankings are computed across all 110 utilities in the source, with **rank 1 = largest
+value**. Ties are broken by first appearance (`ties.method = "first"`). Utilities with
+`NA` for a metric receive `NA` rank for that metric; their presence does not affect the
+ranks of other utilities. An `is_reamp` flag identifies the 31 RE-AMP-state utilities.
+(`07_calculate_utility_profits.R:68–79`)
+
+### 4.6 Outputs produced
+
+Two CSVs are written to `outputs/` with a `dd-mm-yyyy` date prefix
+(`07_calculate_utility_profits.R:92–106`):
+
+| File | Contents |
+|------|----------|
+| `{date}-reamp-utility-profits-summary.csv` | 31 RE-AMP utilities: `utility`, `parent_company`, `reamp_states_served`, `service_states`, `hq_state`, `iso_rto`, 2021/2025 profit and PoB columns, change ratios, `name_footnote`; sorted by `profit_2025_millions` descending |
+| `{date}-us-utility-profits-rankings.csv` | All 110 utilities: same metrics plus `is_reamp` flag and all five `rank_*` columns; sorted by `rank_profit_2025` |
+
+---
+
+## 5. Data Sources
 
 ### DOE LEAD 2022 (Low-Income Energy Affordability Data)
 
@@ -390,3 +475,23 @@ absent, ensuring that `filter(state != 72L)` and the left-join together produce 
 - **Note:** 2024 is the first year EIA collected Form 112 data; no prior-year comparison
   is possible. Quality flags (`Q` = response rate < 50%; `R` = RSE > 50%) are present on
   Georgia gas data and Texas electric shutoff notices. 51 jurisdictions (50 states + DC).
+
+### EPI Utility Profits (2021–2025)
+
+- **Provider:** Economic Policy Institute (EPI)
+- **Version:** Last updated 2026-05-08
+- **Underlying source:** SEC 10-K filings, FERC Form 1, and company annual reports for
+  investor-owned utilities reporting to the SEC; 110 utilities covering major US service
+  territories
+- **Geographic level:** Company (utility); each row is one utility with national-scope
+  profit figures (not disaggregated by state)
+- **File used by this repo:**
+  `../../Data/epi/2021 - 2025 Utility Profits (Make a copy to edit) _ Last Updated 5_8_26.xlsx`,
+  sheet `"Data"`, read with `readxl::read_excel()` — data is read from the raw `Data/`
+  folder rather than `Cleaned_Data/` (no cleaning pipeline currently exists for this source)
+- **Columns consumed:** `Utility`, `Parent Company`, `Service state(s)`, `HQ state`,
+  `ISO/RTO`, `2021 Profit ($ millions)`, `2021 Profit Portion of Bill (%)`,
+  `2025 Profit ($ millions)`, `2025 Profit Portion of Bill (%)`
+- **Note:** No `SOURCE.md` currently exists for `Data/epi/` — this is a governance gap
+  flagged for follow-up. Footnote markers on utility names (`*`/`**`/`***`/`****`) are
+  defined in the workbook's `"Notes"` sheet; see section 4.3 above for handling.

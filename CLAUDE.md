@@ -1,10 +1,11 @@
 # CLAUDE.md — reamp-shutoffs-analysis-2026
 
 ## Purpose
-Energy burden, energy insecurity, and utility shutoff analysis for RE-AMP Midwest states.
-Produces per-state and per-FPL-bracket energy burden metrics (DOE LEAD), self-reported
-energy insecurity rates (Household Pulse Survey), and state-level shutoff counts, rates,
-and US-wide rankings (EIA Form 112).
+Energy burden, energy insecurity, utility shutoff, and utility profits analysis for RE-AMP
+Midwest states. Produces per-state and per-FPL-bracket energy burden metrics (DOE LEAD),
+self-reported energy insecurity rates (Household Pulse Survey), state-level shutoff counts,
+rates, and US-wide rankings (EIA Form 112), and utility-level profit metrics and rankings
+(EPI, 2021–2025).
 
 ## Type
 Research (consumes cleaned data; does not write to Cleaned_Data/)
@@ -23,6 +24,10 @@ Active — in development (2026-06)
   monthly shutoffs, 2024 (51 jurisdictions × 12 months; first federal residential
   disconnections survey)
 - See `../../Cleaned_Data/eia/112/CLEANED.md` for full column schema
+- `../../Data/epi/2021 - 2025 Utility Profits (Make a copy to edit) _ Last Updated 5_8_26.xlsx`
+  (sheet `"Data"`) — EPI utility profits workbook; 110 US utilities; wide format with
+  2021–2025 profit ($ millions) and profit portion of bill (%); read from raw `Data/`
+  (no cleaned version; no `SOURCE.md` currently exists for `Data/epi/`)
 
 ## RE-AMP States
 MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
@@ -65,6 +70,10 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
 - `R/06_calculate_shutoffs.R` — reads EIA 112 CSV, crosswalks state names to abbreviations,
   computes monthly rate columns, aggregates to annual counts + cumulative rates, quality-flags
   states, produces RE-AMP summary and US rankings; writes two CSVs
+- `R/07_calculate_utility_profits.R` — reads EPI workbook (sheet "Data"), coerces character
+  profit columns via `parse_number()`, strips footnote markers, attributes RE-AMP states via
+  "any overlap" rule, computes 2021/2025 profit and PoB metrics plus change ratios, produces
+  RE-AMP summary (31 utilities) and US rankings (110 utilities); writes two CSVs
 
 ## Outputs (outputs/, dd-mm-yyyy prefix)
 - `17-06-2026-reamp-state-energy-burden-summary.csv` — RE-AMP states, state-level metrics
@@ -74,6 +83,8 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
 - `{date}-us-energy-insecurity-rankings.csv` — all 51 jurisdictions: pct_*, n_*, rank_* for all four metrics
 - `{date}-reamp-shutoffs-summary.csv` — RE-AMP states: annual counts, cumulative rates, pct_not_reconnected, quality flags
 - `{date}-us-shutoffs-rankings.csv` — all 51 jurisdictions: counts + rates + rank_* for all rate metrics, sorted by rank_combined_shutoff_rate
+- `{date}-reamp-utility-profits-summary.csv` — 31 RE-AMP utilities: 2021/2025 profit ($ millions) + portion of bill (%), change ratios, reamp_states_served, footnote markers; sorted by profit_2025_millions descending
+- `{date}-us-utility-profits-rankings.csv` — all 110 utilities: same metrics + is_reamp flag + rank_profit_2025/2021/change, rank_pob_2025/change; sorted by rank_profit_2025
 
 ## Reference Scripts
 - `../../Internal/data-pipelines/eep-pipeline-core/processors/doe-lead_processor.R`
