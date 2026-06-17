@@ -63,6 +63,13 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
   computation, affordable/unaffordable classification, state and FPL-per-state summaries,
   US rankings; writes three output CSVs
 - `R/03_visualize_burden.R` — ggplot2 charts for presentation
+- `R/08_visualize_burden_slide.R` — slide-ready energy-burden graphics for the pptx deck:
+  the "income cliff" descending bar chart (household-weighted % unaffordable by FPL band,
+  pooled across the ten states) and the national-context ribbon (ten RE-AMP states placed
+  along the full 51-jurisdiction range). No title/subtitle/caption annotations (added in the
+  deck). Uses `eeptheme` (`theme_eep_slide`, Inter font); blue is primary, orange is the
+  secondary accent for the at-risk focus (severe bands; RE-AMP dots). Writes two high-res
+  PNGs (white background, 300 dpi) to `plots/`
 - `R/04_load_pulse_data.R` — reads HPS harmonized microdata, filters to 2024, selects 7
   columns, validates cycle/state counts; caches to `temp/pulse_2024_slim.rds`
 - `R/05_calculate_energy_insecurity.R` — builds respondent-level YES flags and union,
