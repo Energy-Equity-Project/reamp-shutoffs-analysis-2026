@@ -1,0 +1,22 @@
+# R
+.Rhistory
+.RData
+.Rproj.user
+.Renviron
+
+# Generated outputs (never commit)
+outputs/
+plots/
+temp/
+
+# Data files (shared data lives in ../../Data/ and ../../Cleaned_Data/)
+data/*.csv
+data/*.parquet
+data/*.xlsx
+data/*.xls
+*.parquet
+*.feather
+
+# OS
+.DS_Store
+Thumbs.db
