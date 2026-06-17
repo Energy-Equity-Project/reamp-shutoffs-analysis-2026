@@ -85,6 +85,11 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
   Panel A ranked composite bars (10 RE-AMP states, high→low) and Panel B region-wide
   component hardships on the same x-scale; composed with patchwork. Exports combined figure
   + two standalone PNGs (white background, 300 dpi) to `plots/`
+- `R/10_visualize_shutoffs_slide.R` — slide-ready shutoffs graphic (EIA Form 112): split
+  ranked bar chart (10 RE-AMP states, high→low) with light "later reconnected" segment from 0
+  and dark "not reconnected" segment at the tip; "% not rec." text column on the right;
+  asterisks on quality-flagged states (IA, ND, SD). Exports full-width (9.0 × 3.3 in) and
+  callout-variant (6.4 × 3.3 in) PNGs (white background, 300 dpi) to `plots/`
 
 ## Outputs (outputs/, dd-mm-yyyy prefix)
 - `17-06-2026-reamp-state-energy-burden-summary.csv` — RE-AMP states, state-level metrics
@@ -103,6 +108,8 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
 - `{date}-reamp-insecurity-figure.png` — combined two-panel insecurity figure (slide 09); 9.2 × 3.3 in
 - `{date}-reamp-insecurity-composite.png` — Panel A only (state ranked bars); 5.3 × 3.3 in
 - `{date}-reamp-insecurity-components.png` — Panel B only (region-wide components); 3.6 × 3.3 in
+- `{date}-reamp-shutoffs-figure.png` — shutoffs split ranked bar chart (slide 10); 9.0 × 3.3 in
+- `{date}-reamp-shutoffs-figure-callout.png` — callout variant (narrower, for stat callout column); 6.4 × 3.3 in
 
 ## Reference Scripts
 - `../../Internal/data-pipelines/eep-pipeline-core/processors/doe-lead_processor.R`
