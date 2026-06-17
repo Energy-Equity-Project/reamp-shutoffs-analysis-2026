@@ -1,10 +1,10 @@
 # CLAUDE.md — reamp-shutoffs-analysis-2026
 
 ## Purpose
-Energy burden and affordability analysis for RE-AMP Midwest states using DOE LEAD 2022
-data. Produces per-state and per-FPL-bracket counts and percentages of households with
-unaffordable energy burdens (>6% of income), plus a US-wide state ranking for national
-context.
+Energy burden, energy insecurity, and utility shutoff analysis for RE-AMP Midwest states.
+Produces per-state and per-FPL-bracket energy burden metrics (DOE LEAD), self-reported
+energy insecurity rates (Household Pulse Survey), and state-level shutoff counts, rates,
+and US-wide rankings (EIA Form 112).
 
 ## Type
 Research (consumes cleaned data; does not write to Cleaned_Data/)
@@ -19,6 +19,10 @@ Active — in development (2026-06)
 - `../../Cleaned_Data/us_census/household_pulse_survey/02-04-2026-pulse-energy-puf-harmonized.csv` —
   Household Pulse Survey harmonized microdata (1,367,012 rows; 2023 weeks 53–63 + 2024 cycles 01–09)
 - See `../../Cleaned_Data/us_census/household_pulse_survey/CLEANED.md` for full column schema
+- `../../Cleaned_Data/eia/112/20-04-2026-eia-112-shutoffs.csv` — EIA Form 112 state-level
+  monthly shutoffs, 2024 (51 jurisdictions × 12 months; first federal residential
+  disconnections survey)
+- See `../../Cleaned_Data/eia/112/CLEANED.md` for full column schema
 
 ## RE-AMP States
 MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
@@ -42,6 +46,10 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
   the 9 cycles of 2024; `pct_*` and `n_*` are independent averages, not algebraically linked
 - **Union computation**: `insecure` flag set at the respondent level (person-level OR) so the
   union is a proper logical union, not a sum of marginals
+- **Shutoff rates**: sum of 12 monthly per-customer rates (cumulative annual incidence);
+  combined rates use `electric_customers` as denominator (proxy for total households);
+  `pct_not_reconnected` = share of shutoffs not reversed by a reconnection (higher = worse);
+  quality flags (`Q`/`R`) surfaced via `any_quality_flag` (Georgia gas, Texas elec notices)
 
 ## Key Files
 - `R/01_load_lead_data.R` — reads parquet (selected columns only), drops FIPS 72 (PR),
@@ -54,6 +62,9 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
   columns, validates cycle/state counts; caches to `temp/pulse_2024_slim.rds`
 - `R/05_calculate_energy_insecurity.R` — builds respondent-level YES flags and union,
   computes per-cycle weighted counts, equal-cycle averages, state rankings; writes two CSVs
+- `R/06_calculate_shutoffs.R` — reads EIA 112 CSV, crosswalks state names to abbreviations,
+  computes monthly rate columns, aggregates to annual counts + cumulative rates, quality-flags
+  states, produces RE-AMP summary and US rankings; writes two CSVs
 
 ## Outputs (outputs/, dd-mm-yyyy prefix)
 - `17-06-2026-reamp-state-energy-burden-summary.csv` — RE-AMP states, state-level metrics
@@ -61,6 +72,8 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
 - `17-06-2026-us-state-burden-rankings.csv` — all 51 jurisdictions ranked by % unaffordable
 - `{date}-reamp-energy-insecurity-summary.csv` — RE-AMP states: pct_* and n_* for all four insecurity metrics
 - `{date}-us-energy-insecurity-rankings.csv` — all 51 jurisdictions: pct_*, n_*, rank_* for all four metrics
+- `{date}-reamp-shutoffs-summary.csv` — RE-AMP states: annual counts, cumulative rates, pct_not_reconnected, quality flags
+- `{date}-us-shutoffs-rankings.csv` — all 51 jurisdictions: counts + rates + rank_* for all rate metrics, sorted by rank_combined_shutoff_rate
 
 ## Reference Scripts
 - `../../Internal/data-pipelines/eep-pipeline-core/processors/doe-lead_processor.R`

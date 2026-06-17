@@ -207,7 +207,116 @@ Two CSVs are written to `outputs/` with a `dd-mm-yyyy` date prefix
 
 ---
 
-## 3. Data Sources
+## 3. Shutoffs (due to Non-Payment) Methodology
+
+### 3.1 Definition and metrics
+
+**Utility shutoff** (disconnection) data comes from EIA Form 112, the first federal survey
+of residential utility disconnections. The following metrics are produced for each state:
+
+| Metric | Description | Source columns |
+|--------|-------------|----------------|
+| `elec_notices` | Annual electric shutoff notices issued | `electric_shutoff_notices` |
+| `gas_notices` | Annual gas shutoff notices issued | `gas_shutoff_notices` |
+| `combined_notices` | Electric + gas notices | derived |
+| `elec_shutoffs` | Annual residential electric shutoffs | `electric_shutoffs` |
+| `gas_shutoffs` | Annual residential gas shutoffs | `gas_shutoffs` |
+| `combined_shutoffs` | Electric + gas shutoffs | derived |
+| `combined_reconnections` | Electric + gas reconnections | `electric_reconnections` + `gas_reconnections` |
+| `net_shutoffs` | Combined shutoffs − combined reconnections | derived |
+| `pct_not_reconnected` | Share of shutoffs not reversed by a reconnection (%) | derived |
+| `combined_shutoff_rate` | Cumulative annual combined shutoff rate | derived |
+
+(`06_calculate_shutoffs.R:80–118`)
+
+### 3.2 Annual aggregation
+
+**Counts** are summed across the 12 monthly rows per state with `na.rm = TRUE`.
+
+**Rates** are computed as the **sum of the 12 monthly per-customer rates** — the
+cumulative annual incidence of shutoffs experienced per customer:
+
+```
+annual_rate = Σ (monthly_count / monthly_customers)   over months 1–12
+```
+
+This approach avoids distortions from changing customer bases mid-year and is not
+equivalent to dividing the annual count total by a single annual denominator.
+(`06_calculate_shutoffs.R:41–71, 90–96`)
+
+**Zero/NA denominator guard.** If a month's denominator (`electric_customers` or
+`gas_customers`) is 0 or NA, that month's rate is set to NA and excluded from the annual
+sum via `na.rm = TRUE`. (`06_calculate_shutoffs.R:43–70`)
+
+### 3.3 Denominator convention
+
+Combined shutoff, notice, and net rates all use **`electric_customers`** as the
+denominator. Electric service is near-universal (covering >99% of U.S. households), making
+the electric customer count a practical proxy for total households. Gas rates use
+`gas_customers` as their denominator.
+
+Caveat: in dual-fuel states, `combined_shutoffs` aggregates electric and gas events into a
+single numerator but retains the electric-only denominator. This means the combined rate
+can exceed 1.0 in states with very high dual-fuel shutoff activity.
+(`06_calculate_shutoffs.R:37–39`)
+
+### 3.4 Net shutoffs and % not reconnected
+
+```
+net_shutoffs        = combined_shutoffs − combined_reconnections
+pct_not_reconnected = (combined_shutoffs − combined_reconnections) / combined_shutoffs × 100
+```
+
+`pct_not_reconnected` is the **share of shutoffs not reversed by a reconnection**: a
+higher value means more customers remained disconnected (worse outcome). It is algebraically
+equivalent to `net_shutoffs / combined_shutoffs × 100`, but the "% not reconnected"
+framing makes directionality explicit.
+
+Both metrics are computed from **annual totals** (after the monthly aggregate step), not
+summed monthly values. (`06_calculate_shutoffs.R:112–116`)
+
+**Important caveat:** EIA Form 112 reconnections may include customers reconnected from
+prior-month shutoffs and customers who self-cured. Net shutoffs and `pct_not_reconnected`
+are therefore accounting deltas, not a precise count of households that remained
+disconnected at year-end. The percentage can be negative for states where reconnections
+exceed shutoffs in the annual total.
+
+### 3.5 Quality flags
+
+EIA Form 112 uses two data quality flags on count columns:
+
+- **Q** — response rate below 50%; estimate is based on imputation
+- **R** — relative standard error (RSE) exceeds 50%; estimate is highly uncertain
+
+A per-state logical `any_quality_flag` is TRUE if any `*_flag` column carries `Q` or `R`
+in any month. Flagged states are surfaced in both output CSVs and logged to the console.
+Flagged rows are **retained** (not dropped); users should treat their counts and rates as
+indicative only.
+
+Known flags in 2024: Georgia gas data and Texas electric shutoff notices.
+(`06_calculate_shutoffs.R:97–105, 137–144`)
+
+### 3.6 State rankings
+
+Rankings are **rate-based only** (count-based rankings would be dominated by state
+population). Higher rate = rank 1 (worst). Ties are broken by first appearance
+(`ties.method = "first"`). The primary ranking is `rank_combined_shutoff_rate`; separate
+rankings are produced for all seven rate metrics plus `pct_not_reconnected`.
+(`06_calculate_shutoffs.R:176–210`)
+
+### 3.7 Outputs produced
+
+Two CSVs are written to `outputs/` with a `dd-mm-yyyy` date prefix
+(`06_calculate_shutoffs.R:221–241`):
+
+| File | Contents |
+|------|----------|
+| `{date}-reamp-shutoffs-summary.csv` | All count + rate columns, `pct_not_reconnected`, `any_quality_flag` for the 10 RE-AMP states, sorted by `state` |
+| `{date}-us-shutoffs-rankings.csv` | All 51 jurisdictions: counts (unranked) + rates + `rank_*` for all metrics, `is_reamp` flag, sorted by `rank_combined_shutoff_rate` |
+
+---
+
+## 4. Data Sources
 
 ### DOE LEAD 2022 (Low-Income Energy Affordability Data)
 
@@ -257,3 +366,27 @@ absent, ensuring that `filter(state != 72L)` and the left-join together produce 
   - Weights are PWEIGHT (person weights for adults 18+). No household weight is available
     in the harmonized microdata; `n_*` columns in outputs represent weighted persons, not
     households.
+
+### EIA Form 112 (Residential Utility Disconnections)
+
+- **Provider:** U.S. Energy Information Administration (EIA)
+- **Version:** 2024 (first reporting year; no prior-year data for trend comparison)
+- **Underlying source:** Annual survey of electric and gas utilities on residential
+  disconnections, reconnections, and shutoff notices
+- **Geographic level:** State; rows represent state × month (12 monthly rows per state,
+  51 jurisdictions)
+- **File used by this repo:**
+  `../../Cleaned_Data/eia/112/20-04-2026-eia-112-shutoffs.csv`
+- **Columns consumed:** `state`, `year`, `month`, `electric_shutoff_notices`,
+  `electric_shutoff_notices_flag`, `electric_shutoffs`, `electric_shutoffs_flag`,
+  `electric_reconnections`, `electric_reconnections_flag`, `electric_customers`,
+  `gas_shutoff_notices`, `gas_shutoff_notices_flag`, `gas_shutoffs`,
+  `gas_shutoffs_flag`, `gas_reconnections`, `gas_reconnections_flag`, `gas_customers`
+- **Raw data origin:** EIA Form EIA-112 survey (not yet publicly available as a
+  downloadable dataset; sourced via EIA data request)
+- **Cleaning script:**
+  `../../Internal/data-pipelines/eep-pipeline-core/processors/eia-112_processor.R`
+- **Full column schema:** `../../Cleaned_Data/eia/112/CLEANED.md`
+- **Note:** 2024 is the first year EIA collected Form 112 data; no prior-year comparison
+  is possible. Quality flags (`Q` = response rate < 50%; `R` = RSE > 50%) are present on
+  Georgia gas data and Texas electric shutoff notices. 51 jurisdictions (50 states + DC).
