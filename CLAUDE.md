@@ -81,6 +81,10 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
   profit columns via `parse_number()`, strips footnote markers, attributes RE-AMP states via
   "any overlap" rule, computes 2021/2025 profit and PoB metrics plus change ratios, produces
   RE-AMP summary (31 utilities) and US rankings (110 utilities); writes two CSVs
+- `R/09_visualize_insecurity_slide.R` — slide-ready energy-insecurity graphics (HPS 2024):
+  Panel A ranked composite bars (10 RE-AMP states, high→low) and Panel B region-wide
+  component hardships on the same x-scale; composed with patchwork. Exports combined figure
+  + two standalone PNGs (white background, 300 dpi) to `plots/`
 
 ## Outputs (outputs/, dd-mm-yyyy prefix)
 - `17-06-2026-reamp-state-energy-burden-summary.csv` — RE-AMP states, state-level metrics
@@ -92,6 +96,13 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
 - `{date}-us-shutoffs-rankings.csv` — all 51 jurisdictions: counts + rates + rank_* for all rate metrics, sorted by rank_combined_shutoff_rate
 - `{date}-reamp-utility-profits-summary.csv` — 31 RE-AMP utilities: 2021/2025 profit ($ millions) + portion of bill (%), change ratios, reamp_states_served, footnote markers; sorted by profit_2025_millions descending
 - `{date}-us-utility-profits-rankings.csv` — all 110 utilities: same metrics + is_reamp flag + rank_profit_2025/2021/change, rank_pob_2025/change; sorted by rank_profit_2025
+
+## Outputs (plots/, dd-mm-yyyy prefix)
+- `{date}-reamp-burden-cliff.png` — energy-burden income-cliff bar chart (slide 08); 12 × 3.2 in
+- `{date}-reamp-burden-ribbon.png` — national-context ribbon (slide 08); 12 × 1.5 in
+- `{date}-reamp-insecurity-figure.png` — combined two-panel insecurity figure (slide 09); 9.2 × 3.3 in
+- `{date}-reamp-insecurity-composite.png` — Panel A only (state ranked bars); 5.3 × 3.3 in
+- `{date}-reamp-insecurity-components.png` — Panel B only (region-wide components); 3.6 × 3.3 in
 
 ## Reference Scripts
 - `../../Internal/data-pipelines/eep-pipeline-core/processors/doe-lead_processor.R`
