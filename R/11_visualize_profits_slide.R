@@ -83,7 +83,7 @@ top <- prof %>%
   mutate(
     name   = recode(utility, !!!name_lookup),
     parent = unname(parent_lookup[name]),
-    disp   = ifelse(is.na(parent), name, paste0(name, " (", parent, ")")),
+    disp   = ifelse(is.na(parent), name, paste0(name, "\n(", parent, ")")),
     growth = (profit_change_ratio - 1) * 100,
     grw_col = case_when(
       is.na(growth) ~ "na",
@@ -111,7 +111,7 @@ cat("total:", total, "| over_1b:", over_1b, "| nrow:", nrow(prof), "\n")
 x_grw <- max(top$profit_2025_millions) * 1.45
 
 p <- ggplot(top, aes(x = profit_2025_millions, y = disp)) +
-  geom_col(fill = HOT, width = 0.66) +
+  geom_col(fill = HOT, width = 0.5) +
   geom_text(
     aes(
       x     = profit_2025_millions,
@@ -167,6 +167,6 @@ p <- ggplot(top, aes(x = profit_2025_millions, y = disp)) +
 full_file    <- paste0("plots/", date_prefix, "-reamp-profits-figure.png")
 callout_file <- paste0("plots/", date_prefix, "-reamp-profits-figure-callout.png")
 
-ggsave(full_file,    p, width = 9.0, height = 3.3, units = "in", dpi = 300, bg = "white")
-ggsave(callout_file, p, width = 6.4, height = 3.3, units = "in", dpi = 300, bg = "white")
+ggsave(full_file,    p, width = 9.0, height = 4.5, units = "in", dpi = 300, bg = "white")
+ggsave(callout_file, p, width = 6.4, height = 4.5, units = "in", dpi = 300, bg = "white")
 cat("Written:", full_file, "\n", callout_file, "\n")
