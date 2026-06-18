@@ -135,8 +135,8 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
 - `{date}-reamp-shutoffs-figure-callout.png` — callout variant (narrower, for stat callout column); 6.4 × 3.3 in
 - `{date}-reamp-profits-figure.png` — utility profits ranked bar chart (slide 11); 9.0 × 3.3 in
 - `{date}-reamp-profits-figure-callout.png` — callout variant (narrower, for stat callout column); 6.4 × 3.3 in
-- `{date}-reamp-utility-shutoffs-named.png` — named hero: top 8 RE-AMP electric utilities stacked-bar chart (slide 13); 9.0 × 3.3 in
-- `{date}-reamp-utility-shutoffs-named-callout.png` — callout variant of the named hero; 6.4 × 3.3 in
+- `{date}-reamp-utility-shutoffs-named.png` — named hero: top 8 RE-AMP electric utilities stacked-bar chart (slide 13); 6.3 × 3.3 in
+- `{date}-reamp-utility-shutoffs-named-callout.png` — callout variant of the named hero; 4.48 × 3.3 in
 - `{date}-reamp-ownership-shutoffs-panel.png` — ownership panel: 3-facet vertical stack (share / rate / % not rec.); 3.6 × 3.3 in
 - `{date}-reamp-ownership-shutoffs-panel-wide.png` — wider ownership panel variant for layout flexibility; 4.8 × 3.3 in
 

@@ -127,12 +127,13 @@ p1 <- ggplot(long1, aes(x = val, y = label, fill = segment)) +
     labels = c("later reconnected", "not reconnected"),
     name   = NULL
   ) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.22))) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.32))) +
   coord_cartesian(clip = "off") +
   labs(subtitle = "Electric shutoffs — customers reconnected vs. still off") +
   theme_eep_slide(grid_lines = "none", axis_lines = "none") +
   theme(
     legend.position      = "top",
+    legend.location      = "plot",
     legend.justification = "left",
     legend.direction     = "horizontal",
     legend.text          = element_text(size = 9, family = body_font, color = INK),
@@ -217,10 +218,10 @@ p2 <- ggplot(own_long, aes(x = value, y = ownership, fill = fill_col)) +
 named_file         <- paste0("plots/", date_prefix, "-reamp-utility-shutoffs-named.png")
 named_callout_file <- paste0("plots/", date_prefix, "-reamp-utility-shutoffs-named-callout.png")
 
-ggsave(named_file,         p1, width = 9.0, height = 3.3, units = "in", dpi = 300, bg = "white")
+ggsave(named_file,         p1, width = 6.3, height = 3.3, units = "in", dpi = 300, bg = "white")
 cat("Written:", named_file, "\n")
 
-ggsave(named_callout_file, p1, width = 6.4, height = 3.3, units = "in", dpi = 300, bg = "white")
+ggsave(named_callout_file, p1, width = 5.5, height = 3.3, units = "in", dpi = 300, bg = "white")
 cat("Written:", named_callout_file, "\n")
 
 # Figure 2 — ownership panel (3-facet vertical stack; narrower than full-width)
