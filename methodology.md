@@ -314,6 +314,57 @@ Two CSVs are written to `outputs/` with a `dd-mm-yyyy` date prefix
 | `{date}-reamp-shutoffs-summary.csv` | All count + rate columns, `pct_not_reconnected`, `any_quality_flag` for the 10 RE-AMP states, sorted by `state` |
 | `{date}-us-shutoffs-rankings.csv` | All 51 jurisdictions: counts (unranked) + rates + `rank_*` for all metrics, `is_reamp` flag, sorted by `rank_combined_shutoff_rate` |
 
+### 3.8 Utility-level shutoffs
+
+`12_calculate_utility_shutoffs.R` produces a parallel shutoff analysis at the **utility**
+grain rather than the state×month grain of §3.1–3.2. The unit of analysis is one row per
+**utility × state × `energy_type`** (electric/gas); 2,148 rows; 2024 only.
+
+**Pre-derived rates.** Unlike §3.2's monthly-sum approach, this script does not recompute
+rates from raw monthly counts. The upstream `eia-112-data-pipeline` already provides
+`shutoff_rate`, `reconnection_rate`, `final_notice_rate`, and national/state/ownership
+percentiles for every utility row. This script derives only three additional metrics
+(`12_calculate_utility_shutoffs.R:31–44`):
+
+```
+net_shutoffs        = shutoffs − reconnections
+net_shutoff_rate    = net_shutoffs / customer_count   (NA when customer_count ≤ 0)
+pct_not_reconnected = (shutoffs − reconnections) / shutoffs × 100
+                      (NA when shutoffs ≤ 0)
+```
+
+`pct_not_reconnected` is the same "% not reconnected" framing as §3.4 — a higher value
+means more customers remained disconnected (worse outcome).
+
+**Quality-flag handling.** Quality issues are carried on a single `bad_data_flag` column
+(`"Y"` = flagged) plus a `data_quality_note`, rather than the per-column `Q`/`R` flags of
+§3.5. Handling differs by output:
+
+- **Output A** (RE-AMP summary): flagged rows **retained and marked** via `is_flagged`.
+- **Outputs B and C** (US rankings, ownership): flagged rows **excluded**.
+
+**Within-fuel rankings.** US utility rankings are computed **within each `energy_type`
+group** separately for `shutoff_rate` and `pct_not_reconnected`, with rank 1 = worst =
+highest rate. Ties are broken by first appearance (`ties.method = "first"`). This contrasts
+with §3.6's single across-jurisdiction ranking at the state level.
+(`12_calculate_utility_shutoffs.R:70–85`)
+
+**Ownership aggregate-ratio summary.** Counts are pooled by `ownership × energy_type` and
+rates are recomputed from the pooled totals (aggregate-ratio method, mirroring §1.3). This
+is run for both `reamp` and `us` scope separately and stacked with a `scope` column.
+(`12_calculate_utility_shutoffs.R:105–138`)
+
+### 3.9 Outputs produced (utility-level)
+
+Three CSVs are written to `outputs/` with a `dd-mm-yyyy` date prefix
+(`12_calculate_utility_shutoffs.R:150–169`):
+
+| File | Contents |
+|------|----------|
+| `{date}-reamp-utility-shutoffs-summary.csv` | All RE-AMP utilities (flagged retained + marked): counts, rates, `net_shutoffs`, `pct_not_reconnected`, by `energy_type`; sorted by `energy_type` then `desc(shutoff_rate)` |
+| `{date}-us-utility-shutoffs-rankings.csv` | All US utilities (flagged excluded): within-fuel ranks on `shutoff_rate` and `pct_not_reconnected`; sorted by `energy_type` then `rank_shutoff_rate` |
+| `{date}-ownership-shutoffs-summary.csv` | Aggregate-ratio metrics by `ownership × energy_type` for both `reamp` and `us` scope |
+
 ---
 
 ## 4. Utility Profits Methodology
@@ -495,3 +546,24 @@ absent, ensuring that `filter(state != 72L)` and the left-join together produce 
 - **Note:** No `SOURCE.md` currently exists for `Data/epi/` — this is a governance gap
   flagged for follow-up. Footnote markers on utility names (`*`/`**`/`***`/`****`) are
   defined in the workbook's `"Notes"` sheet; see section 4.3 above for handling.
+
+### EIA Form 112 — Utility-Annual (Pipeline Output)
+
+- **Provider:** U.S. Energy Information Administration (EIA), via the internal
+  `eia-112-data-pipeline`
+- **Version:** 2024
+- **Geographic level:** Utility × state × `energy_type` (2,148 rows; one row per utility
+  serving a given state in a given fuel type)
+- **File used by this repo:**
+  `../../Internal/data-pipelines/eia-112-data-pipeline/outputs/09-06-2026-eia-112-utility-annual.csv`
+  — read directly from the pipeline `outputs/`, **not** from `Cleaned_Data/`
+  (`12_calculate_utility_shutoffs.R:10–13`)
+- **Columns consumed:** `state`, `utility_name`, `energy_type`, `ownership`, `parent`,
+  `customer_count`, `shutoffs`, `reconnections`, `final_notices`, `shutoff_rate`,
+  `reconnection_rate`, `final_notice_rate`, `bad_data_flag`, `data_quality_note`
+  (the pipeline also provides pre-computed national/state/ownership percentiles)
+- **Pipeline docs:** `../../Internal/data-pipelines/eia-112-data-pipeline/METHODOLOGY.md`
+  and `README.md`
+- **Note:** Pre-derives per-utility rates and percentiles; `bad_data_flag == "Y"` marks
+  quality issues. This is a single consolidated flag, in contrast to the per-column `Q`/`R`
+  flags carried by the state-level cleaned CSV (see §3.5).
