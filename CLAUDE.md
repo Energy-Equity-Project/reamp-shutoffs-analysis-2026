@@ -28,6 +28,10 @@ Active — in development (2026-06)
   (sheet `"Data"`) — EPI utility profits workbook; 110 US utilities; wide format with
   2021–2025 profit ($ millions) and profit portion of bill (%); read from raw `Data/`
   (no cleaned version; no `SOURCE.md` currently exists for `Data/epi/`)
+- `../../Internal/data-pipelines/eia-112-data-pipeline/outputs/09-06-2026-eia-112-utility-annual.csv` —
+  EIA Form 112 utility-level annual data, 2024 (2,148 rows; one row per utility × state × energy_type;
+  pre-derived rates and percentiles included; `bad_data_flag` = "Y" marks quality issues); read
+  directly from the eia-112-data-pipeline `outputs/`, not from `Cleaned_Data/`
 
 ## RE-AMP States
 MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
@@ -95,6 +99,11 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
   with profit value and a right-side growth-vs-2021 column (dark coral = up, grey = down,
   light grey = no 2021 baseline). Uses deck focus-orange (#E07B39). Exports full-width
   (9.0 × 3.3 in) and callout-variant (6.4 × 3.3 in) PNGs (white background, 300 dpi) to `plots/`
+- `R/12_calculate_utility_shutoffs.R` — reads EIA 112 utility-annual CSV, computes
+  `net_shutoffs`, `net_shutoff_rate`, `pct_not_reconnected`, and quality/RE-AMP flags per
+  utility; produces RE-AMP utility summary (Output A), US utility rankings by fuel type
+  with within-fuel ranks (Output B), and ownership-type aggregate-ratio summary for both
+  RE-AMP and US scope (Output C); writes three CSVs
 
 ## Outputs (outputs/, dd-mm-yyyy prefix)
 - `17-06-2026-reamp-state-energy-burden-summary.csv` — RE-AMP states, state-level metrics
@@ -106,6 +115,9 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
 - `{date}-us-shutoffs-rankings.csv` — all 51 jurisdictions: counts + rates + rank_* for all rate metrics, sorted by rank_combined_shutoff_rate
 - `{date}-reamp-utility-profits-summary.csv` — 31 RE-AMP utilities: 2021/2025 profit ($ millions) + portion of bill (%), change ratios, reamp_states_served, footnote markers; sorted by profit_2025_millions descending
 - `{date}-us-utility-profits-rankings.csv` — all 110 utilities: same metrics + is_reamp flag + rank_profit_2025/2021/change, rank_pob_2025/change; sorted by rank_profit_2025
+- `{date}-reamp-utility-shutoffs-summary.csv` — all RE-AMP utilities (flagged rows retained and marked): shutoff counts, rates, pct_not_reconnected, by energy_type; sorted by energy_type then desc(shutoff_rate)
+- `{date}-us-utility-shutoffs-rankings.csv` — all US utilities (flagged excluded): within-fuel-type ranks on shutoff_rate and pct_not_reconnected; sorted by energy_type then rank_shutoff_rate
+- `{date}-ownership-shutoffs-summary.csv` — aggregate-ratio shutoff metrics by ownership type × energy_type for both RE-AMP ("reamp") and national ("us") scope
 
 ## Outputs (plots/, dd-mm-yyyy prefix)
 - `{date}-reamp-burden-cliff.png` — energy-burden income-cliff bar chart (slide 08); 12 × 3.2 in
