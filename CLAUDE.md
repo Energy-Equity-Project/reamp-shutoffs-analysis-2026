@@ -104,6 +104,12 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
   utility; produces RE-AMP utility summary (Output A), US utility rankings by fuel type
   with within-fuel ranks (Output B), and ownership-type aggregate-ratio summary for both
   RE-AMP and US scope (Output C); writes three CSVs
+- `R/13_visualize_utility_shutoffs_slide.R` — slide-ready utility-level shutoffs graphics
+  (EIA Form 112, electric only): Figure 1 — named hero, horizontal stacked bars for the 8
+  RE-AMP electric utilities with the most shutoffs (company-level aggregation collapses
+  multi-state utilities); Figure 2 — ownership panel, three-facet vertical stack comparing
+  IOU / municipal / cooperative on share of shutoffs, rate per 100 customers, and % not
+  reconnected. Exports 4 PNGs to `plots/`
 
 ## Outputs (outputs/, dd-mm-yyyy prefix)
 - `17-06-2026-reamp-state-energy-burden-summary.csv` — RE-AMP states, state-level metrics
@@ -129,6 +135,10 @@ MI, OH, IN, IL, WI, MN, IA, ND, SD, KS (10 Midwest states)
 - `{date}-reamp-shutoffs-figure-callout.png` — callout variant (narrower, for stat callout column); 6.4 × 3.3 in
 - `{date}-reamp-profits-figure.png` — utility profits ranked bar chart (slide 11); 9.0 × 3.3 in
 - `{date}-reamp-profits-figure-callout.png` — callout variant (narrower, for stat callout column); 6.4 × 3.3 in
+- `{date}-reamp-utility-shutoffs-named.png` — named hero: top 8 RE-AMP electric utilities stacked-bar chart (slide 13); 9.0 × 3.3 in
+- `{date}-reamp-utility-shutoffs-named-callout.png` — callout variant of the named hero; 6.4 × 3.3 in
+- `{date}-reamp-ownership-shutoffs-panel.png` — ownership panel: 3-facet vertical stack (share / rate / % not rec.); 3.6 × 3.3 in
+- `{date}-reamp-ownership-shutoffs-panel-wide.png` — wider ownership panel variant for layout flexibility; 4.8 × 3.3 in
 
 ## Reference Scripts
 - `../../Internal/data-pipelines/eep-pipeline-core/processors/doe-lead_processor.R`
